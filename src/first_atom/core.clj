@@ -1,12 +1,13 @@
 
 (ns first-atom.core
   (:gen-class) (:require [clojure.java.io :as io]
-            [clojure.string :as s]))
+            [clojure.string :as s]
+            ))
 
 (def dictionary "english.txt")
 (def words (atom []))
 
-(def trie1 (reduce add-to-trie {} (take 20 @words)))
+;(def trie1 (reduce add-to-trie {} (take 20 @words)))
 
 (defn tokenize []
   (let [english
@@ -29,14 +30,14 @@
     (if (empty? prefixes)
       (keep key (sort-by val > result))
       (recur (flatten (map (fn [prfx] 
-                             (map #(str prfx %)
-                                  (filter (fn [k] (not (= k :f)))  
-                                          (filter (fn [k] (not (= k :&))) 
-                                                  (keys (get-in trie1 prfx)))
-                                          ))
-                             prefixes ))
+                     (map #(str prfx %)
+                          (filter (fn [k] (not (= k :f)))  
+                                  (filter (fn [k] (not (= k :&))) 
+                                          (keys (get-in trie1 prfx)))
+                                  ))
+                     prefixes )))
              (reduce (fn [m prfx] (assoc m prfx (:f (get-in trie1 prfx) 1))) 
                      result
                      (keep #(if (:& (get-in trie1 %)) %)
-                                     prefixes)))))))
+                           prefixes))))))
 

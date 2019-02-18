@@ -1,13 +1,15 @@
 
+
 (ns first-atom.core
-  (:gen-class) (:require [clojure.java.io :as io]
-            [clojure.string :as s]
-            ))
+  (:gen-class)
+  (:require [clojure.java.io :as io]
+            [clj-memory-meter.core :as mm]
+            [clojure.string :as s]))
 
 (def dictionary "english.txt")
 (def words (atom []))
 
-;(def trie1 (reduce add-to-trie {} (take 20 @words)))
+;(mm/measure(time(def trie1 (reduce add-to-trie {} (take 20 @words)))))
 
 (defn tokenize []
   (let [english
@@ -23,21 +25,21 @@
                                 (+ %1 %2) %2) prev new))
                {:f 1 :& true}))
 
-(defn get-prefix-data
+
+
+ (defn get-str-prefix
   [trie1 prefix]
   (loop [prefixes [prefix]
          result {}]
     (if (empty? prefixes)
       (keep key (sort-by val > result))
       (recur (flatten (map (fn [prfx] 
-                     (map #(str prfx %)
-                          (filter (fn [k] (not (= k :f)))  
-                                  (filter (fn [k] (not (= k :&))) 
-                                          (keys (get-in trie1 prfx)))
-                                  ))
-                     prefixes )))
-             (reduce (fn [m prfx] (assoc m prfx (:f (get-in trie1 prfx) 1))) 
-                     result
-                     (keep #(if (:& (get-in trie1 %)) %)
-                           prefixes))))))
-
+                             (map #(str prfx %)
+                                  (filter (fn [k] (not (= k :f)))
+                                          (filter (fn [k] (not (= k :&)))
+                                                  (keys (get-in trie1 prfx))))))
+                           prefixes))
+             (reduce
+              (fn [m prfx] (assoc m prfx (:f (get-in trie1 prfx) 1))) 
+                     result (keep #(if (:& (get-in trie1 %)) %)
+                                  prefixes))))))

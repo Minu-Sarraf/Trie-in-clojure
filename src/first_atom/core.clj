@@ -3,13 +3,8 @@
   (:gen-class) (:require [clojure.java.io :as io]
             [clojure.string :as s]))
 
-
 (def dictionary "english.txt")
 (def words (atom []))
-
-
-(defn add-to-trie [trie x]
-  (assoc-in trie `(~@x :&) true))
 
 (def trie1 (reduce add-to-trie {} (take 20 @words)))
 
@@ -19,7 +14,7 @@
            (slurp (io/resource dictionary)) #"\r\n")]
     (swap! words into english)))
 
-(defn add-to-trie1 [trie x]
+(defn add-to-trie [trie x]
     (update-in trie 
                x
                (fn [prev new] 
@@ -27,7 +22,7 @@
                                 (+ %1 %2) %2) prev new))
                {:f 1 :& true}))
 
-(defn get-str-loop
+(defn get-prefix-data
   [trie1 prefix]
   (loop [prefixes [prefix]
          result {}]
@@ -35,8 +30,13 @@
       (keep key (sort-by val > result))
       (recur (flatten (map (fn [prfx] 
                              (map #(str prfx %)
-                                  (filter (fn [k] (not (= k :&))) (keys (get-in trie1 prfx)))))
-                           prefixes))
-             (reduce (fn [m prfx] (assoc m prfx (:f (get-in trie1 prfx) 1))) result (keep #(if (:& (get-in trie1 %)) %)
-                                     prefixes))))))
+                                  (filter (fn [k] (not (= k :f)))  
+                                          (filter (fn [k] (not (= k :&))) 
+                                                  (keys (get-in trie1 prfx)))
+                                          ))
+                             prefixes ))
+             (reduce (fn [m prfx] (assoc m prfx (:f (get-in trie1 prfx) 1))) 
+                     result
+                     (keep #(if (:& (get-in trie1 %)) %)
+                                     prefixes)))))))
 
